@@ -50,3 +50,33 @@ body {
     0 0 4px color-mix(in srgb, currentColor 40%, transparent),
     0 0 8px color-mix(in srgb, currentColor 30%, transparent);
 }
+
+:where([data-marquee]) {
+  --marquee-speed: 40;
+  --marquee-slowdown: 1;
+
+  @media (pointer: coarse) {
+    --marquee-slowdown: 0.6;
+  }
+}
+
+[data-marquee] {
+  overflow-y: clip;
+  touch-action: pan-x pinch-zoom;
+
+  [data-marquee-item] {
+    animation: marquee
+      calc(
+        var(--marquee-distance) /
+        (var(--marquee-speed) * var(--marquee-slowdown)) *
+        1s
+      )
+      linear infinite;
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateY(-100%);
+  }
+}
