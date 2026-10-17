@@ -17,7 +17,10 @@ export function infiniteScrollLoop(
   content: HTMLElement,
   options: InfiniteScrollOptions = {},
 ) {
-  const { scrollSpeed = 40, cloneInto } = options;
+  const { scrollSpeed: speed = 40, cloneInto } = options;
+  const scrollSpeed = matchMedia("(prefers-reduced-motion: reduce)").matches
+    ? null
+    : speed;
 
   const target = cloneInto || container;
 
@@ -29,9 +32,13 @@ export function infiniteScrollLoop(
   const threshold = Math.floor(container.clientHeight * 0.1);
   const mobileSlowdownFactor = 0.6;
 
-  const handleScroll = () => {
-    const contentHeight = content.clientHeight;
+  let contentHeight = content.clientHeight;
+  const resizeObserver = new ResizeObserver(() => {
+    contentHeight = content.clientHeight;
+  });
+  resizeObserver.observe(content);
 
+  const handleScroll = () => {
     if (container.scrollTop > contentHeight + threshold) {
       container.scrollTo(0, container.scrollTop - contentHeight);
     } else if (container.scrollTop < threshold) {
@@ -100,6 +107,7 @@ export function infiniteScrollLoop(
     // Return cleanup function
     return () => {
       container.removeEventListener("scroll", handleScroll);
+      resizeObserver.disconnect();
       container.removeEventListener("touchstart", handleTouchStart);
       container.removeEventListener("touchend", handleTouchEnd);
       if (animationFrameId !== null) {
@@ -112,6 +120,7 @@ export function infiniteScrollLoop(
   // Return cleanup function for non-animated scroll
   return () => {
     container.removeEventListener("scroll", handleScroll);
+    resizeObserver.disconnect();
     cloned.remove();
   };
 }
